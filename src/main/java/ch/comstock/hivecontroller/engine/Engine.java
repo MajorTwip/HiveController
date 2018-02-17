@@ -17,6 +17,7 @@ public class Engine implements Runnable{
 			try {
 				msg = getMsg(this.inMsg);
 				System.out.println(msg.getTarget());
+				System.out.println(msg.getValue());
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				e.printStackTrace();

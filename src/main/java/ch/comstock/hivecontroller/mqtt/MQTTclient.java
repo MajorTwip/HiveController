@@ -24,9 +24,11 @@ public class MQTTclient{
         	System.out.println(broker);
 		}
         this.mqttClient = new MqttClient(this.broker, this.clientId, this.persistence);
+        mqttClient.setCallback(handler);
         if(autostart) {
         	MqttConnectOptions opts = setMQTTParams();
         	connect(opts);
+        	mqttClient.subscribe("#");
         }
 	}
 	
@@ -39,9 +41,6 @@ public class MQTTclient{
         message.setQos(qos);
         mqttClient.publish(topicBase, message);
         System.out.println("Message published");
-        mqttClient.disconnect();
-        System.out.println("Disconnected");
-        System.exit(0);
 	}
 	
 	

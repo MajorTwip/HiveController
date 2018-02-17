@@ -1,5 +1,5 @@
 package ch.comstock.hivecontroller.mqtt;
 
 public enum MsgType {
-	SET, GET
+	SET, GET, IN, OUT
 }

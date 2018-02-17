@@ -3,6 +3,7 @@ package ch.comstock.hivecontroller;
 import java.util.LinkedList;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.pmw.tinylog.Logger;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -29,7 +30,7 @@ public class HiveController {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println("Starting");
+		Logger.info("Starting");
 		System.out.println("Instanciating Hivecontroller");
 		try {
 			new HiveController();	
