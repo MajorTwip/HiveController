@@ -31,11 +31,11 @@ public class HiveController {
 	 */
 	public static void main(String[] args) {
 		Logger.info("Starting");
-		System.out.println("Instanciating Hivecontroller");
+		Logger.trace("Instanciating Hivecontroller");
 		try {
 			new HiveController();	
 		}catch(ConfigException e) {
-			System.out.println(e.getMessage());
+			Logger.error(e.getMessage());
 			System.exit(1);
 		}
 	}
@@ -52,7 +52,7 @@ public class HiveController {
 		try {
 			new MQTTclient(conf, true, msgFromMQTT);
 		}catch(MqttException e) {
-			System.out.println(e.getMessage());
+			Logger.error(e.getMessage());
 		}
 	}
 	
@@ -62,10 +62,10 @@ public class HiveController {
 	}
 	
 	private void loadConf() {
-		System.out.println("Load Config");
+		Logger.info("Load Config");
 		this.conf = ConfigFactory.load();
 		//implement checks
-		System.out.println("Config loaded");
+		Logger.trace("Config loaded");
 	}
 
 }
