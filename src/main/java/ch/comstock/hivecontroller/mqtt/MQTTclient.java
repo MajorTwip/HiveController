@@ -1,5 +1,5 @@
 package ch.comstock.hivecontroller.mqtt;
-import javax.naming.ConfigurationException;
+import java.util.LinkedList;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -15,8 +15,10 @@ public class MQTTclient{
 	String clientId = "NoConf_HiveController";
     MemoryPersistence persistence = new MemoryPersistence();
 	MqttClient mqttClient;
+	MQTTHandler handler;
 	
-	public MQTTclient(Config conf, boolean autostart) throws ConfigException,MqttException{
+	public MQTTclient(Config conf, boolean autostart, LinkedList<Message> msgList) throws ConfigException,MqttException{
+		handler = new MQTTHandler(msgList);
 		if(autostart) {
 			setConfig(conf);
         	System.out.println(broker);
