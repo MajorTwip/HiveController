@@ -59,7 +59,7 @@ public class HiveController {
 	}
 	
 	private void initEngine() {
-		Thread engine = new Thread(new Engine(msgFromMQTT,msgForMQTT));
+		Thread engine = new Thread(new Engine(msgFromMQTT,msgForMQTT, conf));
 		engine.start();
 	}
 	
