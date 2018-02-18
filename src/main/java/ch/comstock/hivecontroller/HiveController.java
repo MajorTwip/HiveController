@@ -23,7 +23,7 @@ import ch.comstock.hivecontroller.mqtt.Message;
 public class HiveController {
 	private Config conf;
 	LinkedList<Message> msgFromMQTT;
-	MQTTclient mqttClient;
+	LinkedList<Message> msgForMQTT;
 
 	/***
 	 * main method. Entrypoint for the hole application
@@ -44,23 +44,22 @@ public class HiveController {
 	
 	private HiveController() throws ConfigException{
 		msgFromMQTT = new LinkedList<Message>();
+		msgForMQTT = new LinkedList<Message>();
 		loadConf();
-		this.mqttClient = initMqtt();
-		initEngine(mqttClient);
+		initMqtt();
+		initEngine();
 	}
 	
-	private MQTTclient initMqtt() throws ConfigException{
-		MQTTclient client = null;
+	private void initMqtt() throws ConfigException{
 		try {
-			client = new MQTTclient(conf, msgFromMQTT);
+			new MQTTclient(conf, msgFromMQTT, msgForMQTT);
 		}catch(MqttException e) {
 			Logger.error(e.getMessage());
 		}
-		return client;
 	}
 	
-	private void initEngine(MQTTclient mqttclient) {
-		Thread engine = new Thread(new Engine(msgFromMQTT));
+	private void initEngine() {
+		Thread engine = new Thread(new Engine(msgFromMQTT,msgForMQTT));
 		engine.start();
 	}
 	

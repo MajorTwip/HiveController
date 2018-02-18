@@ -10,18 +10,21 @@ import com.typesafe.config.ConfigException;
 
 public class MQTTclient{
 	String topicBase = "/";
+	String defaultCmdSuffix = "command";
+	String defaultValueSuffix = "value";
 	int qos = 2;
 	String broker;
 	String clientId = "NoConf_HiveController";
     MemoryPersistence persistence = new MemoryPersistence();
+    
 	MqttClient mqttClient;
 	MQTTHandler handler;
 	LinkedList<String> subscribeList;
-	String defaultCmdSuffix = "command";
-	String defaultValueSuffix = "value";
+	Thread sender;
+
 	
-	public MQTTclient(Config conf, LinkedList<Message> msgList) throws ConfigException,MqttException{
-		handler = new MQTTHandler(msgList);
+	public MQTTclient(Config conf, LinkedList<Message> msgList, LinkedList<Message> outMsg) throws ConfigException,MqttException{
+		this.handler = new MQTTHandler(msgList);
 		subscribeList = new LinkedList<String>();
 		setConfig(conf);
         this.mqttClient = new MqttClient(this.broker, this.clientId, this.persistence);
@@ -29,17 +32,18 @@ public class MQTTclient{
        	MqttConnectOptions opts = setMQTTParams();
        	connect(opts);
        	subscribeConf(conf);
+       	this.sender = new Thread(new MQTTsender(mqttClient,outMsg, qos));
+       	this.sender.start();
 	}
+	
+
+	
+
 	
 	private void connect(MqttConnectOptions opts) throws MqttException{
 		Logger.info("Connecting to broker: "+broker);
         mqttClient.connect(opts);
         Logger.info("Connected");
-        Logger.debug("Publishing message");
-        MqttMessage message = new MqttMessage("Test".getBytes());
-        message.setQos(qos);
-        mqttClient.publish(topicBase, message);
-        Logger.debug("Message published");
 	}
 	
 	
@@ -80,6 +84,7 @@ public class MQTTclient{
 			this.qos = conf.getInt("mqtt.qos");
 			Logger.trace("mqtt.qos set to: {}",this.qos);
 		}
+
 		
 		if(this.topicBase.charAt(this.topicBase.length()-1)!='/') {
 			this.topicBase=this.topicBase + "/";
@@ -122,6 +127,8 @@ public class MQTTclient{
 	public LinkedList<String> getSubscriptions(){
 		return subscribeList;
 	}
+
+
 	
 	
 }

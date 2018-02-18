@@ -29,7 +29,7 @@ public class MQTTHandler implements MqttCallback {
 	public void messageArrived(String topic, MqttMessage msg) throws Exception {
 		Message newMsg = new Message(MsgType.IN, topic, msg.toString());
 		synchronized(msgList) {
-			msgList.add(newMsg);
+			msgList.addLast(newMsg);
 			msgList.notifyAll();
 		}
 	}
