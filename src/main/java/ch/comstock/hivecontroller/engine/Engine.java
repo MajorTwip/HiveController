@@ -2,6 +2,8 @@ package ch.comstock.hivecontroller.engine;
 
 import java.util.LinkedList;
 
+import org.pmw.tinylog.Logger;
+
 import ch.comstock.hivecontroller.mqtt.Message;
 
 public class Engine implements Runnable{
@@ -16,8 +18,7 @@ public class Engine implements Runnable{
 			Message msg;
 			try {
 				msg = getMsg(this.inMsg);
-				System.out.println(msg.getTarget());
-				System.out.println(msg.getValue());
+				Logger.trace("Message received by Engine.\nTopic: {} \nPayload: {}",msg.getTarget(),msg.getValue());
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				e.printStackTrace();

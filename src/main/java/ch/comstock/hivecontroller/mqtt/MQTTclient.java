@@ -3,6 +3,7 @@ import java.util.LinkedList;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.pmw.tinylog.Logger;
 
 import com.typesafe.config.*;
 import com.typesafe.config.ConfigException;
@@ -21,7 +22,6 @@ public class MQTTclient{
 		handler = new MQTTHandler(msgList);
 		if(autostart) {
 			setConfig(conf);
-        	System.out.println(broker);
 		}
         this.mqttClient = new MqttClient(this.broker, this.clientId, this.persistence);
         mqttClient.setCallback(handler);
@@ -33,27 +33,27 @@ public class MQTTclient{
 	}
 	
 	public void connect(MqttConnectOptions opts) throws MqttException{
-        System.out.println("Connecting to broker: "+broker);
+		Logger.info("Connecting to broker: "+broker);
         mqttClient.connect(opts);
-        System.out.println("Connected");
-        System.out.println("Publishing message");
+        Logger.info("Connected");
+        Logger.debug("Publishing message");
         MqttMessage message = new MqttMessage("Test".getBytes());
         message.setQos(qos);
         mqttClient.publish(topicBase, message);
-        System.out.println("Message published");
+        Logger.debug("Message published");
 	}
 	
 	
 	public MqttConnectOptions setMQTTParams() {
-		System.out.println("setMQTTParams");
+		Logger.debug("setMQTTParams");
 		MqttConnectOptions connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(true);
-		System.out.println("ended");
+		Logger.trace("ended");
         return connOpts;
 	}
 	
 	public void setConfig(Config conf) throws ConfigException {
-		System.out.println("setConfig");
+		Logger.trace("setConfig");
 
 		if(conf.hasPath("mqtt.broker")) {
 			this.broker = conf.getString("mqtt.broker");
@@ -70,7 +70,7 @@ public class MQTTclient{
 		if(conf.hasPath("mqtt.qos")) {
 			this.qos = conf.getInt("mqtt.qos");
 		}
-		System.out.println("setConfig ended");
+		Logger.trace("setConfig ended");
 
 	}
 }
