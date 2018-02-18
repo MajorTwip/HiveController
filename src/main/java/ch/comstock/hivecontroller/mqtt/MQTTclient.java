@@ -1,5 +1,6 @@
 package ch.comstock.hivecontroller.mqtt;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -17,6 +18,7 @@ public class MQTTclient{
     MemoryPersistence persistence = new MemoryPersistence();
 	MqttClient mqttClient;
 	MQTTHandler handler;
+	List<String> subscribeList;
 	
 	public MQTTclient(Config conf, boolean autostart, LinkedList<Message> msgList) throws ConfigException,MqttException{
 		handler = new MQTTHandler(msgList);
@@ -32,7 +34,7 @@ public class MQTTclient{
         }
 	}
 	
-	public void connect(MqttConnectOptions opts) throws MqttException{
+	private void connect(MqttConnectOptions opts) throws MqttException{
 		Logger.info("Connecting to broker: "+broker);
         mqttClient.connect(opts);
         Logger.info("Connected");
@@ -44,15 +46,14 @@ public class MQTTclient{
 	}
 	
 	
-	public MqttConnectOptions setMQTTParams() {
+	private MqttConnectOptions setMQTTParams() {
 		Logger.debug("setMQTTParams");
 		MqttConnectOptions connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(true);
-		Logger.trace("ended");
         return connOpts;
 	}
 	
-	public void setConfig(Config conf) throws ConfigException {
+	private void setConfig(Config conf) throws ConfigException {
 		Logger.trace("setConfig");
 
 		if(conf.hasPath("mqtt.broker")) {
@@ -73,4 +74,26 @@ public class MQTTclient{
 		Logger.trace("setConfig ended");
 
 	}
+	
+	
+	
+	public void subscribeMQTT(String topic) {
+		subscribeList.add(topic);
+		if(mqttClient != null) {
+			try {
+				mqttClient.subscribe(topic);
+			} catch (MqttException e) {
+				Logger.warn("Could not subscribe to {}",topic);
+				e.printStackTrace();
+			}
+		}else {
+			Logger.warn("Could not subscribe to {}, client not connected", topic);
+		}
+	}
+	
+	public List<String> getSubscriptions(){
+		return subscribeList;
+	}
+	
+	
 }

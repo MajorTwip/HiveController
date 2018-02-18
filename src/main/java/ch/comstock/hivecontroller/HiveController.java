@@ -2,6 +2,7 @@ package ch.comstock.hivecontroller;
 
 import java.util.LinkedList;
 
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pmw.tinylog.Logger;
 
@@ -23,6 +24,7 @@ import ch.comstock.hivecontroller.mqtt.Message;
 public class HiveController {
 	private Config conf;
 	LinkedList<Message> msgFromMQTT;
+	MQTTclient mqttClient;
 
 	/***
 	 * main method. Entrypoint for the hole application
@@ -44,19 +46,21 @@ public class HiveController {
 	private HiveController() throws ConfigException{
 		msgFromMQTT = new LinkedList<Message>();
 		loadConf();
-		initMqtt();
-		initEngine();
+		this.mqttClient = initMqtt();
+		initEngine(mqttClient);
 	}
 	
-	private void initMqtt() throws ConfigException{
+	private MQTTclient initMqtt() throws ConfigException{
+		MQTTclient client = null;
 		try {
-			new MQTTclient(conf, true, msgFromMQTT);
+			client = new MQTTclient(conf, true, msgFromMQTT);
 		}catch(MqttException e) {
 			Logger.error(e.getMessage());
 		}
+		return client;
 	}
 	
-	private void initEngine() {
+	private void initEngine(MQTTclient mqttclient) {
 		Thread engine = new Thread(new Engine(msgFromMQTT));
 		engine.start();
 	}
