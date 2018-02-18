@@ -2,7 +2,6 @@ package ch.comstock.hivecontroller;
 
 import java.util.LinkedList;
 
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pmw.tinylog.Logger;
 
@@ -53,7 +52,7 @@ public class HiveController {
 	private MQTTclient initMqtt() throws ConfigException{
 		MQTTclient client = null;
 		try {
-			client = new MQTTclient(conf, true, msgFromMQTT);
+			client = new MQTTclient(conf, msgFromMQTT);
 		}catch(MqttException e) {
 			Logger.error(e.getMessage());
 		}

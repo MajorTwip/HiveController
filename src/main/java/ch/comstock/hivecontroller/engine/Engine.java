@@ -10,7 +10,7 @@ public class Engine implements Runnable{
 	LinkedList<Message> inMsg;
 	
 	public Engine(LinkedList<Message> inMsg) {
-		this.inMsg = inMsg;		
+		this.inMsg = inMsg;
 	}
 	
 	public void run() {
@@ -34,6 +34,8 @@ public class Engine implements Runnable{
 			return inMsg.remove();
 		}
 	}
+	
+	
 	
 	
 }
