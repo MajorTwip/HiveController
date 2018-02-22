@@ -15,13 +15,53 @@ public abstract class Initiator {
 
 	public static HashMap<String,Channel> createMap( Config conf) {
 		Logger.trace("Starting with the initialisation of Channels");
-		HashMap<String,Channel> channels = null;
+		HashMap<String,Channel> channels = new HashMap<>();
 		for(Config channel:conf.getConfigList("channels")) {
 			Logger.trace(channel.toString());
-			switch(channel.getString("module")) {
+			
+			String module = channel.getString("module");
+			String name = channel.getString("name");
+			String cmdTopic;
+			String valTopic;
+			
+			if(channel.hasPath("valueTopic")) {
+				valTopic = channel.getString("valueTopic");
+			}else {
+				valTopic = Topics.getValTopic(conf, name);
+			}
+			
+			if(channel.hasPath("cmdTopic")) {
+				cmdTopic = channel.getString("cmdTopic");
+			}else {
+				cmdTopic = Topics.getCmdTopic(conf, name);
+			}
+			
+			Channel chan = null;
+			
+			switch(module) {
 				case "gpio":
-					GPIOchannel chan = new GPIOchannel(Topics.getValTopic(conf,channel.getString("name")),
-							Topics.getCmdTopic(conf,channel.getString("name")), GPIOchannelDirection.IN);
+					int gpio = channel.getInt("gpio");
+					GPIOchannelDirection direction = GPIOchannelDirection.OUT;
+					
+					if(channel.hasPath("direction")) {
+						if(channel.getString("direction").equalsIgnoreCase("in")) {
+							direction = GPIOchannelDirection.IN;
+						}else if(!channel.getString("direction").equalsIgnoreCase("out")){
+							Logger.warn("Direction for channel {} must be 'in' or 'out'");
+						}
+					}
+					
+					if(channel.hasPath("value")) {
+						chan = new GPIOchannel(name, valTopic, cmdTopic, direction,gpio,channel.getBoolean("value"));
+					}else {
+						chan = new GPIOchannel(name, valTopic, cmdTopic, direction,gpio);
+					}
+					
+			}
+			if(chan!=null) {
+				channels.put(name, chan);
+				Logger.debug("added Channel: \n" +chan.toString());
+
 			}
 		}
 		return channels;
