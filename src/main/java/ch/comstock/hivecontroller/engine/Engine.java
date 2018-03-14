@@ -30,7 +30,9 @@ public class Engine implements Runnable{
 	
 	HashMap<String,Channel> channels;
 	
-	GpioController gpioctrl;
+	GpioController gpioctrl = null;
+	
+
 
 
 	/**
@@ -45,8 +47,16 @@ public class Engine implements Runnable{
 		this.conf = conf;
 		this.topicBase = Topics.preparePrefix(conf.getString("mqtt.topicBase"));
 		this.defaultValueSuffix = Topics.prepareSuffix(conf.getString("mqtt.defaultValueSuffix"));
-		
-		gpioctrl = GpioFactory.getInstance();
+			
+		try {
+			gpioctrl = GpioFactory.getInstance();
+	    } catch  (UnsatisfiedLinkError e){
+	        System.err.println("platform does not support this driver");      
+	    }
+	    catch (Exception e) {
+	        System.err.println("platform does not support this driver");
+	       
+	    }
 		
 		Timer t1 = new Timer();
 		t1.scheduleAtFixedRate(new TimerTask() {
