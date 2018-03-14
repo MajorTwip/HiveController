@@ -1,5 +1,7 @@
 package ch.comstock.hivecontroller.mqtt;
 import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.pmw.tinylog.Logger;
@@ -7,7 +9,14 @@ import org.pmw.tinylog.Logger;
 import com.typesafe.config.*;
 import com.typesafe.config.ConfigException;
 
+import ch.comstock.hivecontroller.engine.Message;
+import ch.comstock.hivecontroller.utils.Topics;
 
+/**
+ * The Mainclass of the MQTT-Client
+ * @author MajorTwip
+ *
+ */
 public class MQTTclient{
 	String topicBase = "/";
 	String defaultCmdSuffix = "command";
@@ -22,8 +31,15 @@ public class MQTTclient{
 	LinkedList<String> subscribeList;
 	Thread sender;
 
-	
-	public MQTTclient(Config conf, LinkedList<Message> msgList, LinkedList<Message> outMsg) throws ConfigException,MqttException{
+	/**
+	 * Instanciates an MQTT-Client
+	 * @param conf The global configFile
+	 * @param msgList	LinkedBlockingqueue with incomming messages
+	 * @param outMsg	{@link LinkedBlockingQueue} with Messages to Send/Subscribe
+	 * @throws ConfigException
+	 * @throws MqttException
+	 */
+	public MQTTclient(Config conf, LinkedBlockingQueue<Message> msgList, LinkedBlockingQueue<Message> outMsg) throws ConfigException,MqttException{
 		this.handler = new MQTTHandler(msgList);
 		subscribeList = new LinkedList<String>();
 		setConfig(conf);
@@ -31,29 +47,42 @@ public class MQTTclient{
         mqttClient.setCallback(handler);
        	MqttConnectOptions opts = setMQTTParams();
        	connect(opts);
-       	subscribeConf(conf);
-       	this.sender = new Thread(new MQTTsender(mqttClient,outMsg, qos));
+       	this.sender = new Thread(new MQTTsender(this,outMsg, qos));
        	this.sender.start();
 	}
 	
 
 	
 
-	
+	/**
+	 * Connects... no shit Sherlock
+	 * @param opts MqttConnectionOptions
+	 * @throws MqttException
+	 */
 	private void connect(MqttConnectOptions opts) throws MqttException{
 		Logger.info("Connecting to broker: "+broker);
         mqttClient.connect(opts);
         Logger.info("Connected");
 	}
 	
-	
+	/**
+	 * Sets some basic Connection-Settings
+	 * 
+	 * ToDo: why is there no setAutoReconnect
+	 * @return MQTTconnectionOptions
+	 */
 	private MqttConnectOptions setMQTTParams() {
 		Logger.debug("setMQTTParams");
 		MqttConnectOptions connOpts = new MqttConnectOptions();
-        connOpts.setCleanSession(true);
+        connOpts.setCleanSession(false);
         return connOpts;
 	}
 	
+	/**
+	 *  Sets Instance-Varables from config-File
+	 * @param conf The global Configfile
+	 * @throws ConfigException 
+	 */
 	private void setConfig(Config conf) throws ConfigException {
 		Logger.trace("setConfig");
 
@@ -67,48 +96,43 @@ public class MQTTclient{
 		if(conf.hasPath("mqtt.topicBase")) {
 			this.topicBase = conf.getString("mqtt.topicBase");
 			Logger.trace("mqtt.topicBase set to: {}",this.topicBase );
+		}else {
+			Logger.warn("mqtt.topicBase is not configured. Using: {}",this.topicBase );
 		}
 		if(conf.hasPath("mqtt.defaultCmdSuffix")) {
 			this.defaultCmdSuffix = conf.getString("mqtt.defaultCmdSuffix");
 			Logger.trace("mqtt.defaultCmdSuffix set to: {}",this.defaultCmdSuffix);
+		}else {
+			Logger.debug("mqtt.defaultCmdSuffix is not configured. Using: {}",this.defaultCmdSuffix);
 		}
 		if(conf.hasPath("mqtt.defaultValueSuffix")) {
 			this.defaultValueSuffix = conf.getString("mqtt.defaultValueSuffix");
 			Logger.trace("mqtt.defaultValueSuffix set to: {}",this.defaultValueSuffix);
+		}else {
+			Logger.debug("mqtt.defaultValueSuffix is not configured. Using: {}",this.defaultValueSuffix);
 		}
 		if(conf.hasPath("mqtt.clientId")) {
 			this.clientId = conf.getString("mqtt.clientId");
 			Logger.trace("mqtt.clientId set to: {}",this.clientId );
+		}else {
+			Logger.debug("mqtt.clientId is not configured. Using: {}",this.clientId );
 		}
 		if(conf.hasPath("mqtt.qos")) {
 			this.qos = conf.getInt("mqtt.qos");
 			Logger.trace("mqtt.qos set to: {}",this.qos);
 		}
 
-		
-		if(this.topicBase.charAt(this.topicBase.length()-1)!='/') {
-			this.topicBase=this.topicBase + "/";
-		}
-		
-		if(this.defaultCmdSuffix.charAt(0)!='/') {
-			this.defaultCmdSuffix = "/" + this.defaultCmdSuffix;
-		}
-		
-		if(this.defaultValueSuffix.charAt(0)!='/') {
-			this.defaultValueSuffix = "/" + this.defaultValueSuffix;
-		}
+		this.topicBase = Topics.preparePrefix(this.topicBase);
+		this.defaultCmdSuffix = Topics.prepareSuffix(this.defaultCmdSuffix);
+		this.defaultValueSuffix = Topics.prepareSuffix(this.defaultValueSuffix);
+
 		Logger.trace("setConfig ended");
 
 	}
-	
-	private void subscribeConf(Config conf) {
-		for(Config channel:conf.getConfigList("channels")) {
-			Logger.trace(channel.toString());
-			String topic = topicBase + channel.getString("name") + defaultCmdSuffix;
-			subscribeMQTT(topic);
-		}
-	}
-	
+	/**
+	 * Subscribes to a Topic and adds the topic to the list
+	 * @param topic
+	 */
 	public void subscribeMQTT(String topic) {
 		Logger.debug("Subscribe to Topic {}", topic);
 		subscribeList.add(topic);
@@ -124,6 +148,22 @@ public class MQTTclient{
 		}
 	}
 	
+	public void sendMQTT(String topic, MqttMessage message) {
+		try {
+			mqttClient.publish(topic, message);
+		} catch (MqttPersistenceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 
+	 * @return List of subscribed Topics
+	 */
 	public LinkedList<String> getSubscriptions(){
 		return subscribeList;
 	}

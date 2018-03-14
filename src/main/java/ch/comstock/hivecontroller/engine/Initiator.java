@@ -1,6 +1,8 @@
 package ch.comstock.hivecontroller.engine;
 
 import java.util.HashMap;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
 
@@ -61,8 +63,16 @@ public abstract class Initiator {
 			if(chan!=null) {
 				channels.put(name, chan);
 				Logger.debug("added Channel: \n" +chan.toString());
-
 			}
+		}
+		return channels;
+	}
+	public static HashMap<String,Channel> createMapSubscribe( Config conf, LinkedBlockingQueue<Message> outMsg) {
+		HashMap<String, Channel> channels = createMap(conf);
+		Set<String> keys = channels.keySet();
+		for(String key : keys) {
+			Channel channel = channels.get(key);
+			channel.subscribe(outMsg);
 		}
 		return channels;
 	}

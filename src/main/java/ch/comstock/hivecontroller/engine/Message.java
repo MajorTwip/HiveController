@@ -1,4 +1,6 @@
-package ch.comstock.hivecontroller.mqtt;
+package ch.comstock.hivecontroller.engine;
+
+import ch.comstock.hivecontroller.mqtt.MsgType;
 
 public class Message {
 	private MsgType msgType;

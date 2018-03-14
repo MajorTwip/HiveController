@@ -1,7 +1,5 @@
 package ch.comstock.hivecontroller.channels;
 
-import org.pmw.tinylog.Logger;
-
 public class GPIOchannel extends Channel{
 	private GPIOchannelDirection direction;
 	private int gpio;

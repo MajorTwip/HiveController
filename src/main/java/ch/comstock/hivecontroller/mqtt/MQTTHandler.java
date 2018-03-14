@@ -1,37 +1,40 @@
 package ch.comstock.hivecontroller.mqtt;
 
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.pmw.tinylog.Logger;
 
+import ch.comstock.hivecontroller.engine.Message;
+
+/**
+ * MQTT-Callbacks
+ * @author MajorTwip
+ *
+ */
 public class MQTTHandler implements MqttCallback {
-	private LinkedList<Message> msgList;
+	private LinkedBlockingQueue<Message> msgList;
 	
-	public MQTTHandler(LinkedList<Message> msgList) {
+	public MQTTHandler(LinkedBlockingQueue<Message> msgList) {
 		this.msgList = msgList;
 	}
 
 	@Override
-	public void connectionLost(Throwable arg0) {
-		// TODO Auto-generated method stub
-
+	public void connectionLost(Throwable ex) {
+		Logger.warn(ex.getMessage());
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void messageArrived(String topic, MqttMessage msg) throws Exception {
 		Message newMsg = new Message(MsgType.IN, topic, msg.toString());
-		synchronized(msgList) {
-			msgList.addLast(newMsg);
-			msgList.notifyAll();
-		}
+		msgList.add(newMsg);
 	}
 
 }

@@ -3,19 +3,22 @@ package ch.comstock.hivecontroller.engine;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
 
 import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
-import ch.comstock.hivecontroller.mqtt.Message;
 import ch.comstock.hivecontroller.mqtt.MsgType;
-
+/**
+ * The engine, or Supervisorclass.
+ * @author MajorTwip
+ *
+ */
 public class Engine implements Runnable{
-	LinkedList<Message> inMsg;
-	LinkedList<Message> outMsg;
+	LinkedBlockingQueue<Message> inMsg;
+	LinkedBlockingQueue<Message> outMsg;
 	Config conf;
 	String topicBase;
 	String defaultValueSuffix;
@@ -23,8 +26,13 @@ public class Engine implements Runnable{
 	HashMap<String,Channel> channels;
 
 
-	
-	public Engine(LinkedList<Message> inMsg, LinkedList<Message> outMsg, Config conf) {
+	/**
+	 * 
+	 * @param inMsg Queue of received messages
+	 * @param outMsg Queue of messages to send over MQTT
+	 * @param conf The global config
+	 */
+	public Engine(LinkedBlockingQueue<Message> inMsg, LinkedBlockingQueue<Message> outMsg, Config conf) {
 		this.inMsg = inMsg;
 		this.outMsg = outMsg;
 		this.conf = conf;
@@ -39,7 +47,7 @@ public class Engine implements Runnable{
 		
 		sendStatus();
 		
-		channels = Initiator.createMap(conf);
+		channels = Initiator.createMapSubscribe(conf, outMsg);
 	}
 	
 	public void run() {
@@ -55,7 +63,7 @@ public class Engine implements Runnable{
 		}
 	}
 	
-	private Message getMsg(LinkedList<Message> msgQueue) throws InterruptedException {
+	private Message getMsg(LinkedBlockingQueue<Message> msgQueue) throws InterruptedException {
 		synchronized(inMsg){
 			while(inMsg.isEmpty()) {
 				inMsg.wait();
@@ -72,7 +80,7 @@ public class Engine implements Runnable{
 	private void sendMsg(String topic, String payload) {
 		Message msg = new Message(MsgType.OUT,topic,payload);
 		synchronized (outMsg) {
-			outMsg.addLast(msg);
+			outMsg.add(msg);
 			outMsg.notifyAll();
 		}
 	}
