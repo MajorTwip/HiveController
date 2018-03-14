@@ -1,15 +1,10 @@
 package ch.comstock.hivecontroller;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pmw.tinylog.Logger;
 
-import com.google.common.collect.Collections2;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;

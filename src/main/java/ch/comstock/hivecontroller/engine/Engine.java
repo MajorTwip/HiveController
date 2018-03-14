@@ -3,14 +3,19 @@ package ch.comstock.hivecontroller.engine;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
 
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
 import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
 import ch.comstock.hivecontroller.mqtt.MsgType;
+import ch.comstock.hivecontroller.utils.Topics;
 /**
  * The engine, or Supervisorclass.
  * @author MajorTwip
@@ -24,6 +29,8 @@ public class Engine implements Runnable{
 	String defaultValueSuffix;
 	
 	HashMap<String,Channel> channels;
+	
+	GpioController gpioctrl;
 
 
 	/**
@@ -36,25 +43,28 @@ public class Engine implements Runnable{
 		this.inMsg = inMsg;
 		this.outMsg = outMsg;
 		this.conf = conf;
-		this.topicBase = conf.getString("mqtt.topicBase");
-		this.defaultValueSuffix = conf.getString("mqtt.defaultValueSuffix");
-		if(topicBase.charAt(this.topicBase.length()-1)!='/') {
-			topicBase = topicBase + "/";
-		}
-		if(defaultValueSuffix.charAt(0)!='/') {
-			defaultValueSuffix =  "/" + defaultValueSuffix;
-		}
+		this.topicBase = Topics.preparePrefix(conf.getString("mqtt.topicBase"));
+		this.defaultValueSuffix = Topics.prepareSuffix(conf.getString("mqtt.defaultValueSuffix"));
 		
-		sendStatus();
+		gpioctrl = GpioFactory.getInstance();
 		
-		channels = Initiator.createMapSubscribe(conf, outMsg);
+		Timer t1 = new Timer();
+		t1.scheduleAtFixedRate(new TimerTask() {
+			
+			@Override
+			public void run() {
+				sendStatus();
+			}
+		}, 0, 60000);
+		
+		channels = Initiator.createMapSubscribe(conf, outMsg, gpioctrl);
 	}
 	
 	public void run() {
 		while(!Thread.currentThread().isInterrupted()) {
 			Message msg = null;
 			try {
-				msg = getMsg(this.inMsg);
+				msg = inMsg.take();
 				Logger.trace("Message received by Engine.\nTopic: {} \nPayload: {}",msg.getTarget(),msg.getValue());
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
@@ -63,26 +73,10 @@ public class Engine implements Runnable{
 		}
 	}
 	
-	private Message getMsg(LinkedBlockingQueue<Message> msgQueue) throws InterruptedException {
-		synchronized(inMsg){
-			while(inMsg.isEmpty()) {
-				inMsg.wait();
-			}
-			return inMsg.remove();
-		}
-	}
-	
-	private String composeCmdTopic(String name) {
-		String topic = topicBase + name + defaultValueSuffix;
-		return topic;
-	}
 	
 	private void sendMsg(String topic, String payload) {
 		Message msg = new Message(MsgType.OUT,topic,payload);
-		synchronized (outMsg) {
-			outMsg.add(msg);
-			outMsg.notifyAll();
-		}
+		outMsg.add(msg);
 	}
 	
 	private void sendStatus() {

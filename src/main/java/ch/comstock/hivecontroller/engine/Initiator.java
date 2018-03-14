@@ -6,22 +6,39 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
 
+import com.pi4j.io.gpio.GpioController;
 import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
-import ch.comstock.hivecontroller.channels.GPIOchannel;
 import ch.comstock.hivecontroller.channels.GPIOchannelDirection;
+import ch.comstock.hivecontroller.channels.GPIOchannelOut;
 import ch.comstock.hivecontroller.utils.Topics;
 
 public abstract class Initiator {
 
-	public static HashMap<String,Channel> createMap( Config conf) {
+	/**^üö-
+	 * .
+	 * @param conf The global Configfile
+	 * @return HashMap of the channels
+	 */
+	public static HashMap<String,Channel> createMap( Config conf, GpioController gpioctrl) {
 		Logger.trace("Starting with the initialisation of Channels");
 		HashMap<String,Channel> channels = new HashMap<>();
 		for(Config channel:conf.getConfigList("channels")) {
 			Logger.trace(channel.toString());
+			String module = "";
 			
-			String module = channel.getString("module");
+			if(channel.hasPath("module")) {
+				module = channel.getString("module");
+			}else {
+				if(channel.hasPath("name")) {
+					Logger.warn("Channel with name {} has no module defined. Skipped", channel.getString("name"));
+				}else {
+					Logger.warn("Channel without specified Name nor Module skipped");
+				}
+				break;
+			}
+			
 			String name = channel.getString("name");
 			String cmdTopic;
 			String valTopic;
@@ -53,22 +70,36 @@ public abstract class Initiator {
 						}
 					}
 					
-					if(channel.hasPath("value")) {
-						chan = new GPIOchannel(name, valTopic, cmdTopic, direction,gpio,channel.getBoolean("value"));
+					if(direction == GPIOchannelDirection.OUT) {
+						if(channel.hasPath("value")) {
+							chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,channel.getBoolean("value"), gpioctrl);
+						}else {
+							chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,gpioctrl);
+						}
 					}else {
-						chan = new GPIOchannel(name, valTopic, cmdTopic, direction,gpio);
+						if(channel.hasPath("value")) {
+							//chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,channel.getBoolean("value"), gpioctrl);
+						}else {
+							//chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,gpioctrl);
+						}
 					}
-					
 			}
 			if(chan!=null) {
-				channels.put(name, chan);
+				channels.put(cmdTopic, chan);
 				Logger.debug("added Channel: \n" +chan.toString());
 			}
 		}
 		return channels;
 	}
-	public static HashMap<String,Channel> createMapSubscribe( Config conf, LinkedBlockingQueue<Message> outMsg) {
-		HashMap<String, Channel> channels = createMap(conf);
+	
+	/**
+	 * Creates a hashmap that contains the channels and calls their Subscribe-Method
+	 * @param conf The global Configfile
+	 * @param outMsg The Messagequeue to the MQTTClient
+	 * @return
+	 */
+	public static HashMap<String,Channel> createMapSubscribe( Config conf, LinkedBlockingQueue<Message> outMsg, GpioController gpioctrl) {
+		HashMap<String, Channel> channels = createMap(conf, gpioctrl);
 		Set<String> keys = channels.keySet();
 		for(String key : keys) {
 			Channel channel = channels.get(key);

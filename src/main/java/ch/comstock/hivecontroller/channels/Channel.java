@@ -1,6 +1,5 @@
 package ch.comstock.hivecontroller.channels;
 
-import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
