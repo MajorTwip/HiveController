@@ -16,6 +16,7 @@ public class Channel {
 	private String name;
 	private String valueTopic;
 	private String cmdTopic;
+	private String module;
 	
 	/**
 	 * Constructor
@@ -23,10 +24,18 @@ public class Channel {
 	 * @param valueTopic MQTT-Topic to send back value
 	 * @param cmdTopic MQTT-Topic to subscribe to to get commands
 	 */
-	public Channel(String name, String valueTopic, String cmdTopic) {
+	public Channel(String name, String valueTopic, String cmdTopic, String module) {
 		this.setName(name);
 		this.valueTopic = valueTopic;
 		this.cmdTopic = cmdTopic;
+		this.module = module;
+	}
+	
+	public Channel(Channel channel) {
+		this.name = channel.getName();
+		this.cmdTopic = channel.getCmdTopic();
+		this.valueTopic=channel.getValueTopic();
+		this.module = channel.getModule();
 	}
 	
 	/**
@@ -90,6 +99,20 @@ public class Channel {
 		if(!msgOut.offer(msg)) {
 			Logger.warn("Could not add Subscription for channel {} to Sendingqueue",cmdTopic);
 		}
+	}
+
+	/**
+	 * @return the module
+	 */
+	public String getModule() {
+		return module;
+	}
+
+	/**
+	 * @param module the module to set
+	 */
+	public void setModule(String module) {
+		this.module = module;
 	}
 
 }

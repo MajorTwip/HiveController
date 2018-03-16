@@ -7,13 +7,18 @@ import com.pi4j.io.gpio.RaspiPin;
 public class GPIOchannelOut extends GPIOchannel{
 	GpioPinDigitalOutput gpio;
 	
-	public GPIOchannelOut(String name,String valueTopic, String cmdTopic,int gpio, GpioController gpioctrl) {
-		super(cmdTopic, cmdTopic, cmdTopic, gpio, false);
+	public GPIOchannelOut(String name,String valueTopic, String cmdTopic,int gpionr, GpioController gpioctrl) {
+		super(cmdTopic, cmdTopic, cmdTopic, gpionr, false, GPIOchannelDirection.OUT);
 		initGpio(gpioctrl);
 	}
 	
-	public GPIOchannelOut(String name,String valueTopic, String cmdTopic,int gpio, boolean value, GpioController gpioctrl) {
-		super(cmdTopic, cmdTopic, cmdTopic, gpio, value);
+	public GPIOchannelOut(String name,String valueTopic, String cmdTopic,int gpionr, boolean value, GpioController gpioctrl) {
+		super(cmdTopic, cmdTopic, cmdTopic, gpionr, value, GPIOchannelDirection.OUT);
+		initGpio(gpioctrl);
+	}
+	
+	public GPIOchannelOut(Channel chan, int gpionr, boolean value, GpioController gpioctrl) {
+		super(chan,gpionr,value,GPIOchannelDirection.OUT);
 		initGpio(gpioctrl);
 	}
 	

@@ -5,13 +5,25 @@ public class GPIOchannel extends Channel{
 	private int gpionr;
 	private boolean value;
 
-	public GPIOchannel(String name,String valueTopic, String cmdTopic,int gpio) {
-		super(name,valueTopic,cmdTopic);
+	public GPIOchannel(String name,String valueTopic, String cmdTopic,int gpionr, GPIOchannelDirection dir) {
+		super(name,valueTopic,cmdTopic,"gpio");
+		this.gpionr = gpionr;
+		this.value = false;
+		this.direction = dir;
 	}
 	
-	public GPIOchannel(String name, String valueTopic, String cmdTopic, int gpio, boolean value) {
-		super(name,valueTopic,cmdTopic);
+	public GPIOchannel(String name, String valueTopic, String cmdTopic, int gpionr, boolean value, GPIOchannelDirection dir) {
+		super(name,valueTopic,cmdTopic,"gpio");
 		this.value = value;
+		this.gpionr = gpionr;
+		this.direction = dir;
+	}
+	
+	public GPIOchannel(Channel chan, int gpionr, boolean value, GPIOchannelDirection dir) {
+		super(chan);
+		this.gpionr = gpionr;
+		this.value = value;	
+		this.direction = dir;
 	}
 	
 	@Override

@@ -11,6 +11,7 @@ import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
 import ch.comstock.hivecontroller.channels.GPIOchannelDirection;
+import ch.comstock.hivecontroller.channels.GPIOchannelIn;
 import ch.comstock.hivecontroller.channels.GPIOchannelOut;
 import ch.comstock.hivecontroller.utils.Topics;
 
@@ -25,7 +26,9 @@ public abstract class Initiator {
 		Logger.trace("Starting with the initialisation of Channels");
 		HashMap<String,Channel> channels = new HashMap<>();
 		for(Config channel:conf.getConfigList("channels")) {
+			
 			Logger.trace(channel.toString());
+			
 			String module = "";
 			
 			if(channel.hasPath("module")) {
@@ -38,6 +41,7 @@ public abstract class Initiator {
 				}
 				break;
 			}
+			
 			
 			String name = channel.getString("name");
 			String cmdTopic;
@@ -55,12 +59,12 @@ public abstract class Initiator {
 				cmdTopic = Topics.getCmdTopic(conf, name);
 			}
 			
-			Channel chan = null;
+			Channel chan = new Channel(name, valTopic,cmdTopic,module);
 			
 			switch(module) {
 				case "gpio":
 					if(gpioctrl!=null) {
-						int gpio = channel.getInt("gpio");
+						int gpionr = channel.getInt("gpio");
 						GPIOchannelDirection direction = GPIOchannelDirection.OUT;
 						
 						if(channel.hasPath("direction")) {
@@ -68,25 +72,26 @@ public abstract class Initiator {
 								direction = GPIOchannelDirection.IN;
 							}else if(!channel.getString("direction").equalsIgnoreCase("out")){
 								Logger.warn("Direction for channel {} must be 'in' or 'out'");
+								break;
 							}
 						}
 						
 						if(direction == GPIOchannelDirection.OUT) {
+							Logger.trace("Instanciate: name:{} cmdtopic:{} valtopic:{} gpionr:{}",chan.getName(),chan.getCmdTopic(),chan.getValueTopic(),gpionr);
 							if(channel.hasPath("value")) {
-								chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,channel.getBoolean("value"), gpioctrl);
+								chan = new GPIOchannelOut(chan, gpionr,channel.getBoolean("value"), gpioctrl);
 							}else {
-								chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,gpioctrl);
+								chan = new GPIOchannelOut(chan, gpionr,false,gpioctrl);
 							}
 						}else {
-							if(channel.hasPath("value")) {
-								//chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,channel.getBoolean("value"), gpioctrl);
-							}else {
-								//chan = new GPIOchannelOut(name, valTopic, cmdTopic, gpio,gpioctrl);
-							}
+							chan = new GPIOchannelIn(chan, gpionr, gpioctrl);
 						}
 					}else {
 						Logger.warn("Pi4J not supported on this platform or not installed correctly.\n Skipping channel {}",name);
+						chan = null;
 					}
+					break;
+				default:
 			}
 			if(chan!=null) {
 				channels.put(cmdTopic, chan);
