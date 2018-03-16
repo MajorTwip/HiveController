@@ -14,6 +14,7 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
+import ch.comstock.hivecontroller.channels.GPIOchannelIn;
 import ch.comstock.hivecontroller.channels.GPIOchannelOut;
 import ch.comstock.hivecontroller.mqtt.MsgType;
 import ch.comstock.hivecontroller.utils.Topics;
@@ -68,14 +69,16 @@ public class Engine implements Runnable{
 			}
 		}, 0, 60000);
 		
-		channels = Initiator.createMapSubscribe(conf, outMsg, gpioctrl);
+		channels = Initiator.createMap(conf, gpioctrl);
 		
 		
 		
 		for(String key:channels.keySet()) {
 			Channel chan = channels.get(key);
-			if(chan.getClass().equals(GPIOchannelOut.class)){
-				Logger.trace("blabla");
+			chan.subscribe(outMsg);
+			if(chan.getClass().equals(GPIOchannelIn.class)){
+				GPIOchannelIn chanIn = (GPIOchannelIn) chan;
+				chanIn.addListener(outMsg);
 			}
 		}
 	}

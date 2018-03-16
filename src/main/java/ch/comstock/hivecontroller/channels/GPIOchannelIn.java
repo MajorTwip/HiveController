@@ -1,8 +1,14 @@
 package ch.comstock.hivecontroller.channels;
 
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.pmw.tinylog.Logger;
+
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.RaspiPin;
+
+import ch.comstock.hivecontroller.engine.Message;
 
 public class GPIOchannelIn extends GPIOchannel{
 	GpioPinDigitalInput gpio;
@@ -32,8 +38,9 @@ public class GPIOchannelIn extends GPIOchannel{
 		return value;
 	}
 	
-	public void addListener(GPIOStateChangeHandler callback) {
-		
+	public void addListener(LinkedBlockingQueue<Message> outMsg) {
+		gpio.addListener(new GPIOStateChangeHandler(getValueTopic(), outMsg));
+		Logger.trace("Added Listener to GPIO {}",getGPIO());
 	}
 	
 	
