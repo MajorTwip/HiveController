@@ -77,7 +77,7 @@ public abstract class Initiator {
 						}
 						
 						if(direction == GPIOchannelDirection.OUT) {
-							Logger.trace("Instanciate: name:{} cmdtopic:{} valtopic:{} gpionr:{}",chan.getName(),chan.getCmdTopic(),chan.getValueTopic(),gpionr);
+							Logger.trace("Instanciate:\n name:{} cmdtopic:{} valtopic:{} gpionr:{}",chan.getName(),chan.getCmdTopic(),chan.getValueTopic(),gpionr);
 							if(channel.hasPath("value")) {
 								chan = new GPIOchannelOut(chan, gpionr,channel.getBoolean("value"), gpioctrl);
 							}else {
