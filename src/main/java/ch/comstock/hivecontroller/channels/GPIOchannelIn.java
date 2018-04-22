@@ -32,10 +32,10 @@ public class GPIOchannelIn extends GPIOchannel{
 		}
 	}
 	
-	public boolean get() {
+	public String get() {
 		boolean value = gpio.isHigh();
 		super.set(value);
-		return value;
+		return Boolean.toString(value);
 	}
 	
 	public void addListener(LinkedBlockingQueue<Message> outMsg) {

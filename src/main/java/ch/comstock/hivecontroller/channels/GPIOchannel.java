@@ -1,5 +1,7 @@
 package ch.comstock.hivecontroller.channels;
 
+import ch.comstock.hivecontroller.utils.Conversions;
+
 public class GPIOchannel extends Channel{
 	private GPIOchannelDirection direction;
 	private int gpionr;
@@ -38,11 +40,15 @@ public class GPIOchannel extends Channel{
 	/**
 	 * @return the value
 	 */
-	public boolean get() {
-		return value;
+	public String get() {
+		return Boolean.toString(value);
 	}
 	
-	protected void set(boolean value) {
+	public void set(String value) {
+		this.value=Conversions.str2bool(value);
+	}
+	
+	public void set(Boolean value) {
 		this.value=value;
 	}
 

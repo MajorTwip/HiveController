@@ -114,5 +114,12 @@ public class Channel {
 	public void setModule(String module) {
 		this.module = module;
 	}
+	
+	public void set(String value) {
+		
+	}
+	public String get() {
+		return "Not Impemented";
+	}
 
 }

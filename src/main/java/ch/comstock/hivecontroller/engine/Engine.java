@@ -15,7 +15,6 @@ import com.typesafe.config.Config;
 
 import ch.comstock.hivecontroller.channels.Channel;
 import ch.comstock.hivecontroller.channels.GPIOchannelIn;
-import ch.comstock.hivecontroller.channels.GPIOchannelOut;
 import ch.comstock.hivecontroller.mqtt.MsgType;
 import ch.comstock.hivecontroller.utils.Topics;
 /**
@@ -89,6 +88,7 @@ public class Engine implements Runnable{
 			try {
 				msg = inMsg.take();
 				Logger.trace("Message received by Engine.\nTopic: {} \nPayload: {}",msg.getTarget(),msg.getValue());
+				Handler.handle(msg,this);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				e.printStackTrace();
@@ -97,13 +97,17 @@ public class Engine implements Runnable{
 	}
 	
 	
-	private void sendMsg(String topic, String payload) {
+	public void sendMsg(String topic, String payload) {
 		Message msg = new Message(MsgType.OUT,topic,payload);
 		outMsg.add(msg);
 	}
 	
 	private void sendStatus() {
 		sendMsg(topicBase + "heartbeat", new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date()));
+	}
+	
+	public HashMap<String,Channel> getChannels(){
+		return channels;
 	}
 	
 	

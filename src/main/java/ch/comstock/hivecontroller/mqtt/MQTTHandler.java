@@ -33,7 +33,7 @@ public class MQTTHandler implements MqttCallback {
 
 	@Override
 	public void messageArrived(String topic, MqttMessage msg) throws Exception {
-		Message newMsg = new Message(MsgType.IN, topic, msg.toString());
+		Message newMsg = new Message(MsgType.getTypeFromPayload(msg.toString()), topic, MsgType.stripCmd(msg.toString()));
 		msgList.add(newMsg);
 	}
 

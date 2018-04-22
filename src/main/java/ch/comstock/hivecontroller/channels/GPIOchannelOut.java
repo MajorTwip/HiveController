@@ -4,6 +4,8 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.RaspiPin;
 
+import ch.comstock.hivecontroller.utils.Conversions;
+
 public class GPIOchannelOut extends GPIOchannel{
 	GpioPinDigitalOutput gpio;
 	
@@ -30,8 +32,8 @@ public class GPIOchannelOut extends GPIOchannel{
 		}
 	}
 	
-	public void set(boolean value) {
-		gpio.setState(value);
+	public void set(String value) {
+		gpio.setState(Conversions.str2bool(value));
 		super.set(value);
 	}
 }
