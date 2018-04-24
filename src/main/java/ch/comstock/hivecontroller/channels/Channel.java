@@ -4,6 +4,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.pmw.tinylog.Logger;
 
+import ch.comstock.hivecontroller.engine.Engine;
 import ch.comstock.hivecontroller.engine.Message;
 import ch.comstock.hivecontroller.mqtt.MsgType;
 /**
@@ -120,6 +121,10 @@ public class Channel {
 	}
 	public String get() {
 		return "Not Impemented";
+	}
+	
+	public void sendVal(Engine eng) {
+		eng.sendMsg(valueTopic, this.get());
 	}
 
 }

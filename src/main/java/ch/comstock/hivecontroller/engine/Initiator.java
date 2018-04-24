@@ -13,6 +13,7 @@ import ch.comstock.hivecontroller.channels.Channel;
 import ch.comstock.hivecontroller.channels.GPIOchannelDirection;
 import ch.comstock.hivecontroller.channels.GPIOchannelIn;
 import ch.comstock.hivecontroller.channels.GPIOchannelOut;
+import ch.comstock.hivecontroller.channels.MaxPowerStationChannel;
 import ch.comstock.hivecontroller.utils.Topics;
 
 public abstract class Initiator {
@@ -91,6 +92,14 @@ public abstract class Initiator {
 						chan = null;
 					}
 					break;
+					
+				case "mhps":
+					if(!channel.hasPath("ip")){
+						Logger.error("No IP for MAX Hauri PowerStation defined");
+						chan = null;
+						break;
+					}
+					chan = new MaxPowerStationChannel(chan, channel.getString("ip"));
 				default:
 			}
 			if(chan!=null) {

@@ -25,6 +25,7 @@ public abstract class Handler {
 					
 				case GET:
 					eng.sendMsg(chan.getValueTopic(), chan.get().toString());
+					chan.sendVal(eng);
 					break;
 	
 				default:
